@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TCO Liftinstallatie Tool v29</title>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --line: #d9e2ec;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --accent: #0f62fe;
+      --accent2: #14b8a6;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --head: #eaf2ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    /* ════════ AUTHENTICATIE OVERLAY ════════ */
+    #auth-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #0f172a;
+      z-index: 999999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: inherit;
+    }
+    .auth-box {
+      background: #ffffff;
+      padding: 2.2rem;
+      border-radius: 16px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .auth-box h2 {
+      margin: 0 0 8px;
+      color: #0f172a;
+      font-size: 22px;
+      font-weight: 700;
+    }
+    .auth-box p {
+      color: #64748b;
+      font-size: 13.5px;
+      margin: 0 0 20px;
+      line-height: 1.4;
+    }
+    .auth-box input[type="password"] {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 15px;
+      margin-bottom: 12px;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .auth-box input[type="password"]:focus {
+      border-color: #0f62fe;
+      box-shadow: 0 0 0 3px rgba(15, 98, 254, 0.15);
+    }
+    .auth-box button {
+      width: 100%;
+      background: #0f62fe;
+      color: #ffffff;
+      border: none;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .auth-box button:hover {
+      background: #004ecc;
+    }
+    .auth-error {
+      color: #ef4444;
+      font-size: 13px;
+      margin-top: 10px;
+      display: none;
+      font-weight: 600;
+    }
+
+    header {
+      background: linear-gradient(135deg, #0f62fe, #14b8a6);
+      color: white;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    header::after {
+      content: "TCO & MJOP Lift Analyser v29";
+      position: absolute;
+      bottom: 10px;
+      right: 18px;
+      font-size: 11px;
+      font-weight: 400;
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 0.12em;
+      pointer-events: none;
+      user-select: none;
+    }
+    header h1 { margin: 0 0 8px; font-size: 28px; }
+    header p { margin: 0; opacity: 0.95; }
+    .wrap {
+      max-width: 1400px;
+      margin: 20px auto 50px;
+      padding: 0 16px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 20px 20px 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+      margin-bottom: 16px;
+    }
+    h2, h3 { margin-top: 0; }
+    .sub {
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: -6px;
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+    input, select, button, textarea {
+      transition: border-color 0.15s;
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      font-size: 14px;
+      background: #fff;
+    }
+    input[type="number"] { text-align: right; }
+    input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(15,98,254,0.12); }
+    .form-divider { border: none; border-top: 1px solid var(--line); margin: 12px 0; }
+    .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--muted); letter-spacing: 0.08em; margin: 10px 0 6px; }
+    button { cursor: pointer; border: none; font-weight: 700; }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-secondary { background: var(--accent2); color: white; }
+    .btn-light { background: #eef4ff; color: var(--accent); border: 1px solid #cfe0ff; }
+    .btn-warning { background: #fffbeb; color: #b45309; border: 1px solid #fef3c7; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+    th, td { border: 1px solid var(--line); padding: 8px; vertical-align: middle; }
+    th { background: var(--head); text-align: left; }
+    .small { font-size: 12px; color: var(--muted); }
+    .kpi { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .kpi .box { padding: 14px; border-radius: 12px; background: #f8fbff; border: 1px solid #d7e7ff; }
+    .kpi .box strong { display: block; font-size: 22px; margin-top: 6px; }
+    .highlight { background: #fff8e6; border: 1px solid #fde7b0; padding: 12px; border-radius: 12px; font-size: 14px; }
+    .scroll { overflow-x: auto; }
+    .muted { color: var(--muted); }
+    .tabs-nav {
+      display: flex; gap: 4px; margin-bottom: 16px;
+      background: #fff; border: 1px solid var(--line);
+      border-radius: 14px; padding: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      flex: 1; min-width: 110px; padding: 10px 14px; border-radius: 10px;
+      border: none; background: transparent; font-size: 13px; font-weight: 700;
+      color: var(--muted); cursor: pointer; transition: background .15s, color .15s;
+      white-space: nowrap;
+    }
+    .tab-btn.active { background: var(--accent); color: #fff; box-shadow: 0 2px 8px rgba(15,98,254,0.18); }
+    .tab-btn:not(.active):hover { background: #eef4ff; color: var(--accent); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .spec-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #eef4ff; border: 1px solid #cfe0ff;
+      color: var(--accent); border-radius: 999px;
+      padding: 5px 12px; font-size: 13px; font-weight: 700;
+      margin: 3px 4px 3px 0;
+    }
+    .spec-badge.fire { background: #fff1f0; border-color: #ffc5c0; color: #d93025; }
+    .spec-badge.ok   { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
+    .dash-kpi {
+      padding: 14px 16px; border-radius: 12px; background: #fff;
+      border: 1px solid var(--line); box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .dash-kpi .dlabel { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+    .dash-kpi .dval { font-size: 22px; font-weight: 700; margin-top: 4px; }
+    .dash-kpi .dnote { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .top-year-card {
+      background: #f8fbff; border: 1px solid #d7e7ff; border-radius: 10px;
+      padding: 12px; text-align: center;
+    }
+    .top-year-card .yr { font-size: 18px; font-weight: 700; color: var(--accent); }
+    .top-year-card .ky { font-size: 12px; color: var(--muted); }
+    .top-year-card .amt { font-size: 14px; font-weight: 700; margin-top: 4px; }
+    .winner { background: #f0fdf4; color: #15803d; font-weight: 700; }
+    .loser  { background: #fff1f0; color: #d93025; }
+    .equal  { background: #fefce8; color: #854d0e; }
+    .footer-note { margin-top: 14px; font-size: 12px; color: var(--muted); }
+    .preset-pill {
+      font-size: 11px; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-weight: 700; display: inline-block;
+    }
+
+    @media print {
+      #auth-overlay { display: none !important; }
+      .tabs-nav, .actions, button, .modal-overlay, .no-print { display: none !important; }
+      .print-only { display: block !important; }
+      .wrap { margin-top: 10px !important; padding-top: 0 !important; }
+      .tab-panel { margin: 0 !important; padding: 0 !important; }
+      .card { box-shadow: none !important; border: 1px solid #ccc !important; break-inside: avoid; margin-bottom: 12px; }
+      header, .dash-kpi, .spec-badge, th { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      table { font-size: 11px; }
+      th, td { padding: 4px 6px !important; }
+      canvas { max-width: 100% !important; height: auto !important; background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      body { font-size: 12px; margin: 0; }
+      .wrap { padding: 0 8px; max-width: 100%; }
+      html, body { height: auto !important; }
+    }
+    .print-only { display: none; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: #fff; border-radius: 16px; padding: 28px 32px; max-width: 440px; width: 90%; box-shadow: 0 8px 40px rgba(0,0,0,0.18); }
+    .modal-box h3 { margin: 0 0 6px; }
+    .modal-box .sub { margin-bottom: 18px; }
+    .print-option { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line); margin-bottom: 10px; cursor: pointer; transition: background .15s; font-weight: 600; font-size: 14px; }
+    .print-option:hover { background: #eef4ff; border-color: #cfe0ff; }
+    .print-option input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+  </style>
+</head>
+<body>
+
+  <!-- ════════ BEVEILIGINGS-OVERLAY ════════ -->
+  <div id="auth-overlay">
+    <div class="auth-box">
+      <h2>Beveiligde Toegang</h2>
+      <p>Voer het wachtwoord in om de TCO &amp; MJOP Lift Calculator v29 te ontgrendelen.</p>
+      <form id="auth-form" onsubmit="event.preventDefault(); verifyPass();">
+        <input type="password" id="auth-pass" placeholder="Wachtwoord" autofocus autocomplete="current-password" />
+        <button type="submit">Ontgrendelen</button>
+        <div id="auth-err" class="auth-error">Onjuist wachtwoord. Probeer het opnieuw.</div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function verifyPass() {
+      var i = document.getElementById('auth-pass').value.trim();
+      // Wachtwoord verificatie voor "WilBert" (Base64 encoded)
+      if (btoa(i) === 'V2lsQmVydA==') {
+        sessionStorage.setItem('tco_v29_authorized', 'true');
+        document.getElementById('auth-overlay').style.display = 'none';
+      } else {
+        document.getElementById('auth-err').style.display = 'block';
+        document.getElementById('auth-pass').value = '';
+        document.getElementById('auth-pass').focus();
+      }
+    }
+
+    // Directe autorisatiecheck bij refreshen binnen dezelfde sessie
+    if (sessionStorage.getItem('tco_v29_authorized') === 'true') {
+      document.getElementById('auth-overlay').style.display = 'none';
+    }
+  </script>
+
+  <header>
+    <h1>TCO &amp; MJOP Liftinstallatie Tool v29</h1>
+    <p>Objectieve Total Cost of Ownership en MJOP-analyse: vergelijk merken, contracten en open componenten.</p>
+  </header>
+
+  <div class="wrap">
+    <div class="tabs-nav">
+      <button class="tab-btn active" id="tabBtnGedeeld"   onclick="switchTab('gedeeld')">⚙ Instellingen</button>
+      <button class="tab-btn"        id="tabBtnLift1"     onclick="switchTab('lift1')">🔵 Lift 1</button>
+      <button class="tab-btn"        id="tabBtnLift2"     onclick="switchTab('lift2')">🟢 Lift 2</button>
+      <button class="tab-btn"        id="tabBtnVergelijk" onclick="switchTab('vergelijk')">⚖️ TCO Vergelijk</button>
+      <button class="tab-btn"        id="tabBtnDashboard" onclick="switchTab('dashboard')">📊 Dashboard</button>
+      <button class="tab-btn"        id="tabBtnPlanning"  onclick="switchTab('planning')">📅 MJOP Prognose</button>
+    </div>
+
+    <!-- ════════ TAB: INSTELLINGEN ════════ -->
+    <div class="tab-panel active" id="tabGedeeld">
+      <div class="card">
+        <h2>Gedeelde projectinstellingen</h2>
+        <div class="sub">Deze parameters gelden voor beide liften en bepalen de vergelijkingsbasis.</div>
+        <div class="section-label">Tijdlijn &amp; Financiële Indexering</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:8px;">
+          <div><label>Startjaar</label><input id="g_startjaar" type="number" value="2026"/></div>
+          <div><label>MJOP Zichtperiode (jaar)</label><input id="g_zichtperiode" type="number" value="10" min="1" max="50"/></div>
+          <div><label>TCO looptijd (jaar)</label><input id="g_looptijd" type="number" value="50" min="1" max="75"/></div>
+          <div><label>Disconteringsvoet % (NPV)</label><input id="g_discount" type="number" value="0.0" step="0.5" min="0" max="15"/></div>
+        </div>
+        <hr class="form-divider"/>
+        <div class="section-label">Gebouwspecificaties (identiek voor beide liften)</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:8px;">
+          <div><label>Stopplaatsen</label><input id="g_stopplaatsen" type="number" value="4" step="1" min="1"/></div>
+          <div><label>Opvoerhoogte (m)</label><input id="g_opvoerhoogte" type="number" value="12" step="0.1" min="0"/></div>
+          <div><label>Hefvermogen (kg)</label><input id="g_hefvermogen" type="number" value="1000" step="10" min="0"/></div>
+          <div><label>Elektriciteitstarief (€/kWh)</label><input id="g_kwhPrijs" type="number" value="0.28" step="0.01" min="0"/></div>
+        </div>
+        <div class="footer-note">Wijzigingen worden direct automatisch in de browser opgeslagen. Disconteringsvoet berekent de Netto Contante Waarde (NPV) voor beleggers.</div>
+      </div>
+    </div>
+
+    <!-- ════════ TAB: LIFT 1 ════════ -->
+    <div class="tab-panel" id="tabLift1">
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+          <h2 style="margin:0;color:#0f62fe;">Lift 1</h2>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <button class="btn-warning btn-sm" onclick="applyPreset(1, 'closed')">⚡ Laad: Gesloten Systeem (Prijsvechter)</button>
+            <button class="btn-light btn-sm" onclick="applyPreset(1, 'open')">🛡️ Laad: Open Componenten (Kwaliteit)</button>
+            <button class="btn-light btn-sm" onclick="exportTemplate(1)">⬇ Sjabloon opslaan</button>
+            <label class="btn-light btn-sm" style="cursor:pointer;padding:6px 12px;border-radius:8px;border:1px solid #cfe0ff;font-size:12px;font-weight:700;color:var(--accent);">
+              ⬆ Sjabloon laden <input type="file" accept=".json" onchange="importTemplate(1, this)" style="display:none;">
+            </label>
+          </div>
+        </div>
+        <div class="section-label">Identificatie &amp; Systeemtype</div>
+        <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:10px;margin-bottom:8px;">
+          <div><label>Projectnaam / Concept</label><input id="projectName" value="Lift 1 (Open Componenten)"/></div>
+          <div><label>Projectreferentie</label><input id="projectRef" value="PRJ-001"/></div>
+          <div>
+            <label>Component architectuur</label>
+            <select id="systeemType">
+              <option value="open" selected>Open marktcomponenten (universeel)</option>
+              <option value="closed">Gesloten fabrikantensysteem (vendor lock-in)</option>
+            </select>
+          </div>
+        </div>
+        <hr class="form-divider"/>
+        <div class="section-label">Aanschaf &amp; Uitvoering</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:8px;">
+          <div><label>Aanschafprijs (€/lift)</label><input id="aanschafPrijs" type="number" value="46000" step="500"/></div>
+          <div><label>Brandweerlift</label><select id="brandweerlift"><option value="nee">Nee</option><option value="ja">Ja</option></select></div>
+          <div><label>Aantal liften</label><input id="aantalLiften" type="number" value="1" min="1" step="1"/></div>
+        </div>
+        <hr class="form-divider"/>
+        <div class="section-label">Exploitatiekosten (jaarlijks)</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:8px;">
+          <div><label>Onderhoud / jaar (€)</label><input id="onderhoudJaar" type="number" value="2900" step="50"/></div>
+          <div><label>Onvoorzien type</label><select id="onvoorzienType"><option value="pct">% van onderhoud</option><option value="eur" selected>Vast (€/jaar)</option></select></div>
+          <div><label>Onvoorzien waarde</label><input id="onvoorzienWaarde" type="number" value="250" step="1"/></div>
+          <div><label>Indexering % / jaar</label><input id="inflatie" type="number" value="2.5" step="0.1"/></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:8px;">
+          <div><label>Energieverbruik (kWh/jaar)</label><input id="kwhJaar" type="number" value="2200" step="50"/></div>
+          <div><label>Vandalisme / jaar (€)</label><input id="vandalismeJaar" type="number" value="0" step="50"/></div>
+          <div><label>Stilstandschade / jaar (€)</label><input id="stilstandJaar" type="number" value="0" step="50"/></div>
+          <div></div>
+        </div>
+        <div class="actions">
+          <button class="btn-primary" onclick="berekenTCO()">Bereken TCO</button>
+          <button class="btn-light" onclick="resetDefaults('')">Herstel</button>
+          <button class="btn-light btn-sm no-print" onclick="printReport()" style="margin-left:auto;">🖨 Afdrukken / PDF</button>
+          <button class="btn-secondary" onclick="exportExcel()">Export Excel</button>
+          <button class="btn-light" onclick="switchTab('vergelijk')">⚖️ Bekijk vergelijk</button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:16px;">
+        <div>
+          <div class="card">
+            <h2>Hoofdcomponenten</h2>
+            <div class="sub">Initiële componentwaarden en complete vervangingsintervallen.</div>
+            <div class="scroll"><table id="mainComponentsTable">
+              <thead><tr><th>Component</th><th>Vervanging (€)</th><th>Interval (jr)</th></tr></thead>
+              <tbody></tbody>
+            </table></div>
+          </div>
+          <div class="card">
+            <h2>Revisies en onderdelen</h2>
+            <div class="sub">Deelvervangingen — worden automatisch overgeslagen bij complete vervanging.</div>
+            <div class="scroll"><table id="subComponentsTable">
+              <thead><tr><th>Categorie</th><th>Onderdeel</th><th>Interval (jr)</th><th>Kosten (€)</th></tr></thead>
+              <tbody></tbody>
+            </table></div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <h2>Resultaten Lift 1</h2>
+            <div id="specLine" style="font-size:13px;color:var(--muted);margin-bottom:10px;padding:8px 10px;background:#f8fbff;border-radius:8px;border:1px solid #e2eeff;min-height:32px;"></div>
+            <div class="kpi">
+              <div class="box"><span class="muted">Initiële investering</span><strong id="kpiInitieel">—</strong></div>
+              <div class="box"><span class="muted">TCO MJOP zichtperiode</span><strong id="kpi10">—</strong><div class="small" id="kpi10Label"></div></div>
+              <div class="box"><span class="muted">TCO totaal nominaal</span><strong id="kpi50">—</strong><div class="small" id="kpi50Years">over 50 jaar</div></div>
+              <div class="box"><span class="muted">Netto Contante Waarde (NPV)</span><strong id="kpiNPV" style="color:var(--accent2);">—</strong><div class="small" id="kpiNPVLabel"></div></div>
+            </div>
+            <div class="footer-note">Resultaten berekend inclusief jaarlijkse indexatie en energiekosten.</div>
+          </div>
+          <div class="card">
+            <h3>Kostensamenstelling</h3>
+            <div id="chips"></div>
+            <div class="highlight" id="uitlegBox">Klik op Bereken TCO.</div>
+          </div>
+          <div class="card">
+            <h3>Jaaroverzicht</h3>
+            <div class="scroll"><table id="yearlyTable">
+              <thead><tr><th>Jaar</th><th>Kj.</th><th>Invest.</th><th>Onderhoud</th><th>Energie</th><th>Planm.</th><th>Totaal</th><th>Cum.</th></tr></thead>
+              <tbody></tbody>
+            </table></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ TAB: LIFT 2 ════════ -->
+    <div class="tab-panel" id="tabLift2">
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+          <h2 style="margin:0;color:#0d9488;">Lift 2</h2>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <button class="btn-warning btn-sm" onclick="applyPreset(2, 'closed')">⚡ Laad: Gesloten Systeem (Prijsvechter)</button>
+            <button class="btn-light btn-sm" onclick="applyPreset(2, 'open')">🛡️ Laad: Open Componenten (Kwaliteit)</button>
+            <button class="btn-light btn-sm" onclick="exportTemplate(2)">⬇ Sjabloon opslaan</button>
+            <label class="btn-light btn-sm" style="cursor:pointer;padding:6px 12px;border-radius:8px;border:1px solid #cfe0ff;font-size:12px;font-weight:700;color:var(--accent);">
+              ⬆ Sjabloon laden <input type="file" accept=".json" onchange="importTemplate(2, this)" style="display:none;">
+            </label>
+          </div>
+        </div>
+        <div class="section-label">Identificatie &amp; Systeemtype</div>
+        <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:10px;margin-bottom:8px;">
+          <div><label>Projectnaam / Concept</label><input id="projectName2" value="Lift 2 (Gesloten Systeem)"/></div>
+          <div><label>Projectreferentie</label><input id="projectRef2" value="PRJ-002"/></div>
+          <div>
+            <label>Component architectuur</label>
+            <select id="systeemType2">
+              <option value="open">Open marktcomponenten (universeel)</option>
+              <option value="closed" selected>Gesloten fabrikantensysteem (vendor lock-in)</option>
+            </select>
+          </div>
+        </div>
+        <hr class="form-divider"/>
+        <div class="section-label">Aanschaf &amp; Uitvoering</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:8px;">
+          <div><label>Aanschafprijs (€/lift)</label><input id="aanschafPrijs2" type="number" value="37500" step="500"/></div>
+          <div><label>Brandweerlift</label><select id="brandweerlift2"><option value="nee">Nee</option><option value="ja">Ja</option></select></div>
+          <div><label>Aantal liften</label><input id="aantalLiften2" type="number" value="1" min="1" step="1"/></div>
+        </div>
+        <hr class="form-divider"/>
+        <div class="section-label">Exploitatiekosten (jaarlijks)</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:8px;">
+          <div><label>Onderhoud / jaar (€)</label><input id="onderhoudJaar2" type="number" value="3850" step="50"/></div>
+          <div><label>Onvoorzien type</label><select id="onvoorzienType2"><option value="pct">% van onderhoud</option><option value="eur" selected>Vast (€/jaar)</option></select></div>
+          <div><label>Onvoorzien waarde</label><input id="onvoorzienWaarde2" type="number" value="350" step="1"/></div>
+          <div><label>Indexering % / jaar</label><input id="inflatie2" type="number" value="2.5" step="0.1"/></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:8px;">
+          <div><label>Energieverbruik (kWh/jaar)</label><input id="kwhJaar2" type="number" value="2800" step="50"/></div>
+          <div><label>Vandalisme / jaar (€)</label><input id="vandalismeJaar2" type="number" value="0" step="50"/></div>
+          <div><label>Stilstandschade / jaar (€)</label><input id="stilstandJaar2" type="number" value="0" step="50"/></div>
+          <div></div>
+        </div>
+        <div class="actions">
+          <button class="btn-primary" onclick="berekenTCO2()">Bereken TCO</button>
+          <button class="btn-light" onclick="resetDefaults('2')">Herstel</button>
+          <button class="btn-light btn-sm no-print" onclick="printReport()" style="margin-left:auto;">🖨 Afdrukken / PDF</button>
+          <button class="btn-secondary" onclick="exportExcel2()">Export Excel</button>
+          <button class="btn-light" onclick="switchTab('vergelijk')">⚖️ Bekijk vergelijk</button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:16px;">
+        <div>
+          <div class="card">
+            <h2>Hoofdcomponenten</h2>
+            <div class="sub">Initiële componentwaarden en complete vervangingsintervallen.</div>
+            <div class="scroll"><table id="mainComponentsTable2">
+              <thead><tr><th>Component</th><th>Vervanging (€)</th><th>Interval (jr)</th></tr></thead>
+              <tbody></tbody>
+            </table></div>
+          </div>
+          <div class="card">
+            <h2>Revisies en onderdelen</h2>
+            <div class="sub">Deelvervangingen — worden automatisch overgeslagen bij complete vervanging.</div>
+            <div class="scroll"><table id="subComponentsTable2">
+              <thead><tr><th>Categorie</th><th>Onderdeel</th><th>Interval (jr)</th><th>Kosten (€)</th></tr></thead>
+              <tbody></tbody>
+            </table></div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <h2>Resultaten Lift 2</h2>
+            <div id="specLine2" style="font-size:13px;color:var(--muted);margin-bottom:10px;padding:8px 10px;background:#f8fbff;border-radius:8px;border:1px solid #e2eeff;min-height:32px;"></div>
+            <div class="kpi">
+              <div class="box"><span class="muted">Initiële investering</span><strong id="kpiInitieel2">—</strong></div>
+              <div class="box"><span class="muted">TCO MJOP zichtperiode</span><strong id="kpi102">—</strong><div class="small" id="kpi10Label2"></div></div>
+              <div class="box"><span class="muted">TCO totaal nominaal</span><strong id="kpi502">—</strong><div class="small" id="kpi50Years2">over 50 jaar</div></div>
+              <div class="box"><span class="muted">Netto Contante Waarde (NPV)</span><strong id="kpiNPV2" style="color:var(--accent2);">—</strong><div class="small" id="kpiNPVLabel2"></div></div>
+            </div>
+            <div class="footer-note">Resultaten berekend inclusief jaarlijkse indexatie en energiekosten.</div>
+          </div>
+          <div class="card">
+            <h3>Kostensamenstelling</h3>
+            <div id="chips2"></div>
+            <div class="highlight" id="uitlegBox2">Klik op Bereken TCO.</div>
+          </div>
+          <div class="card">
+            <h3>Jaaroverzicht</h3>
+            <div class="scroll"><table id="yearlyTable2">
+              <thead><tr><th>Jaar</th><th>Kj.</th><th>Invest.</th><th>Onderhoud</th><th>Energie</th><th>Planm.</th><th>Totaal</th><th>Cum.</th></tr></thead>
+              <tbody></tbody>
+            </table></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ TAB: TCO VERGELIJK ════════ -->
+    <div class="tab-panel" id="tabVergelijk">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+        <h2 style="margin:0;">⚖️ Strategische TCO Vergelijking</h2>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-primary" onclick="berekenVergelijk()">Herbereken vergelijk</button>
+          <button class="btn-light btn-sm no-print" onclick="printReport()">🖨 Afdrukken / PDF</button>
+        </div>
+      </div>
+      <div id="vergelijkStatus" class="highlight" style="margin-bottom:14px;">Beide liften zijn berekend.</div>
+      <div class="card" style="margin-bottom:14px;">
+        <h3 style="margin:0 0 10px;">Specificaties &amp; Uitgangspunten</h3>
+        <div id="specVergelijkTable"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+        <div class="card" id="kpiCard1"></div>
+        <div class="card" id="kpiCard2"></div>
+      </div>
+      <div class="card" id="breakevenCard" style="background:#f0fdf4;border-color:#bbf7d0;">
+        <h3 style="margin:0 0 8px;color:#15803d;">🎯 Break-even &amp; Waarde-analyse</h3>
+        <div id="breakevenTxt" style="font-size:15px;line-height:1.5;"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+        <div class="card" style="padding:16px;"><h3 style="margin:0 0 10px;">Cumulatieve TCO Ontwikkeling</h3><canvas id="vChartLine" height="220"></canvas></div>
+        <div class="card" style="padding:16px;"><h3 style="margin:0 0 10px;">Kosten per jaar (Zichtperiode)</h3><canvas id="vChartBar" height="220"></canvas></div>
+      </div>
+      <div class="card" style="margin-bottom:14px;">
+        <h3 style="margin:0 0 10px;">TCO Vergelijktabel per Fase</h3>
+        <div class="scroll"><table id="vTable">
+          <thead><tr><th>Fase / Periode</th><th>Lift 1 (€)</th><th>Lift 2 (€)</th><th>Verschil (€)</th><th>Voordeligste Keuze</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ════════ TAB: DASHBOARD ════════ -->
+    <div class="tab-panel" id="tabDashboard">
+      <div id="dashboardSection">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 12px;flex-wrap:wrap;gap:10px;">
+          <h2 style="margin:0;" id="dashTitle">Dashboard — Lift 1</h2>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="small">Weergave voor:</span>
+            <button class="tab-btn active" id="dashBtnL1" onclick="setDashLift(1)" style="flex:unset;padding:7px 16px;font-size:13px;">🔵 Lift 1</button>
+            <button class="tab-btn"        id="dashBtnL2" onclick="setDashLift(2)" style="flex:unset;padding:7px 16px;font-size:13px;">🟢 Lift 2</button>
+          </div>
+        </div>
+        <div id="specBadges" style="margin-bottom:14px;"></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;" id="dashKpis"></div>
+        <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:16px;">
+          <div class="card" style="padding:16px;"><h3 style="margin:0 0 12px;">Jaarlijkse kosten — zichtperiode</h3><div class="sub" id="chartPeriodeLabel"></div><canvas id="chartBar" height="200"></canvas></div>
+          <div class="card" style="padding:16px;"><h3 style="margin:0 0 12px;">Kostenverdeling TCO totaal</h3><canvas id="chartPie" height="200"></canvas></div>
+        </div>
+        <div class="card" style="padding:16px;margin-bottom:16px;"><h3 style="margin:0 0 12px;">Cumulatieve TCO curve</h3><canvas id="chartLine" height="100"></canvas></div>
+        <div class="card" style="padding:16px;margin-bottom:16px;">
+          <h3 style="margin:0 0 8px;">Top 5 Piekjaren (Kapitaalreservering)</h3>
+          <div class="sub">Jaren met de hoogste geplande investeringen in componenten.</div>
+          <div id="topYears" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:10px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ TAB: MJOP PLANNING ════════ -->
+    <div id="tabPlanning" class="tab-panel">
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <div>
+            <h2>📅 MJOP Prognose &amp; Management Samenvatting</h2>
+            <p class="sub" id="planningSubtitle">Gedetailleerd overzicht van geplande vervangingen en reserveringen</p>
+          </div>
+          <button class="btn-light btn-sm no-print" onclick="printReport()">🖨 Afdrukken / PDF</button>
+        </div>
+        <div id="planningContent"></div>
+      </div>
+    </div>
+
+    <!-- Print Modal -->
+    <div class="modal-overlay" id="printModal">
+      <div class="modal-box">
+        <h3>🖨 Afdrukken / Exporteer PDF</h3>
+        <div class="sub">Selecteer de secties voor het eindrapport:</div>
+        <label class="print-option"><input type="checkbox" id="pAll" onchange="toggleAllPrint(this)"> <strong>Alles selecteren</strong></label>
+        <hr class="form-divider"/>
+        <label class="print-option"><input type="checkbox" class="pChoice" value="tabGedeeld" checked> ⚙️ Algemene uitgangspunten</label>
+        <label class="print-option"><input type="checkbox" class="pChoice" value="tabLift1" checked> 🔵 Lift 1 specificatie</label>
+        <label class="print-option"><input type="checkbox" class="pChoice" value="tabLift2" checked> 🟢 Lift 2 specificatie</label>
+        <label class="print-option"><input type="checkbox" class="pChoice" value="tabVergelijk" checked> ⚖️ Strategische TCO Vergelijking</label>
+        <label class="print-option"><input type="checkbox" class="pChoice" value="tabDashboard" checked> 📊 Grafisch Dashboard</label>
+        <label class="print-option"><input type="checkbox" class="pChoice" value="tabPlanning" checked> 📅 MJOP Prognose &amp; Samenvatting</label>
+        <div class="modal-actions">
+          <button class="btn-primary" onclick="doPrint()" style="flex:1;">Afdrukken</button>
+          <button class="btn-light" onclick="closePrintModal()" style="flex:1;">Annuleren</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// DATA & PRESETS
+// ═══════════════════════════════════════════════════════════════
+const defaultMainComponents = [
+  { component: 'Liftmachine compleet',              interval: 28, vervanging: 18000 },
+  { component: 'Liftbesturing compleet',             interval: 22, vervanging: 22500 },
+  { component: 'Cabinedeur compleet',                interval: 28, vervanging: 8500  },
+  { component: 'Schachtdeuren compleet',             interval: 35, vervanging: 12000 },
+  { component: 'Tableaus en signaleringen compleet', interval: 22, vervanging: 4500  },
+  { component: 'Liftcabine en cabinebekleding',      interval: 35, vervanging: 15000 },
+  { component: 'Snelheidsbegrenzer compleet',        interval: 22, vervanging: 2750  },
+  { component: '', interval: 0, vervanging: 0 },
+  { component: '', interval: 0, vervanging: 0 },
+];
+
+const defaultSubComponents = [
+  { categorie:'Liftmachine',           onderdeel:'Staalkabels',          interval:12, kosten:4500 },
+  { categorie:'Liftmachine',           onderdeel:'Omleidwielen',         interval:18, kosten:2250 },
+  { categorie:'Liftbesturing',         onderdeel:'Frequentieregeling',   interval:13, kosten:4500 },
+  { categorie:'Liftbesturing',         onderdeel:'Tacho/encoder',        interval:12, kosten:1200 },
+  { categorie:'Liftbesturing',         onderdeel:'Printplaat',           interval:11, kosten:1500 },
+  { categorie:'Cabinedeur',            onderdeel:'Deuraandrijving',      interval:13, kosten:3750 },
+  { categorie:'Cabinedeur',            onderdeel:'Sensorlijst',          interval:10, kosten:1750 },
+  { categorie:'Cabinedeur',            onderdeel:'Deurrevisie',          interval:17, kosten:1000 },
+  { categorie:'Schachtdeuren',         onderdeel:'Schachtdeurrevisie',   interval:17, kosten:2250 },
+  { categorie:'Tableaus en signalering',onderdeel:'Cabinetableau',       interval:17, kosten:2100 },
+  { categorie:'Tableaus en signalering',onderdeel:'Etagetableaus',       interval:17, kosten:2000 },
+  { categorie:'Tableaus en signalering',onderdeel:'Standaanwijzers',     interval:17, kosten:1000 },
+  { categorie:'Tableaus en signalering',onderdeel:'Spreekluistersysteem',interval:12, kosten:1000 },
+  { categorie:'Liftcabine',            onderdeel:'Cabinebekleding',      interval:17, kosten:6500 },
+  { categorie:'Liftcabine',            onderdeel:'Cabineverlichting',    interval:12, kosten:1250 },
+  { categorie:'Liftcabine',            onderdeel:'Vanginrichting',       interval:22, kosten:4500 },
+  { categorie:'Diversen',              onderdeel:'Keuringen',            interval:2,  kosten:1200 },
+  { categorie:'Diversen',              onderdeel:'Schoonmaak/inspectie', interval:1,  kosten:750  },
+  { categorie:'', onderdeel:'', interval:0, kosten:0 },
+  { categorie:'', onderdeel:'', interval:0, kosten:0 },
+];
+
+let lastResult = null, lastResult2 = null;
+let chartBarInst=null, chartPieInst=null, chartLineInst=null;
+let vChartLineInst=null, vChartBarInst=null;
+let dashVisible = false;
+let dashLift = 1;
+
+const COLORS = ['#0f62fe','#14b8a6','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#84cc16'];
+
+function euro(n) {
+  return new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n||0);
+}
+function fac(jaar, inf) { return Math.pow(1+inf, jaar); }
+function gv(id) { const el=document.getElementById(id); return el ? el.value : ''; }
+function gn(id) { return parseFloat(gv(id))||0; }
+function gi(id) { return parseInt(gv(id))||0; }
+
+// ═══════════════════════════════════════════════════════════════
+// JSON TEMPLATE EXPORT / IMPORT
+// ═══════════════════════════════════════════════════════════════
+function exportTemplate(n) {
+  const sfx = n === 2 ? '2' : '';
+  const data = getInputs(sfx);
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  const a = document.createElement('a'); 
+  a.href = URL.createObjectURL(blob);
+  a.download = `tco_lift${n}_v29_sjabloon.json`; 
+  a.click();
+}
+
+function importTemplate(n, input) {
+  const sfx = n === 2 ? '2' : '';
+  const file = input.files[0]; 
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const d = JSON.parse(e.target.result);
+      
+      populateFromData(d, sfx);
+      
+      if(d.main) d.main.forEach((row, i) => {
+        const el = document.getElementById('mc_'+i+sfx+'_v'); if(el) el.value = row.vervanging / Math.max(d.aantalLiften, 1);
+        const eli = document.getElementById('mc_'+i+sfx+'_i'); if(eli) eli.value = row.interval;
+      });
+      
+      if(d.sub) d.sub.forEach((row, i) => {
+        const eli = document.getElementById('sc_'+i+sfx+'_i'); if(eli) eli.value = row.interval;
+        const elk = document.getElementById('sc_'+i+sfx+'_k'); if(elk) elk.value = row.kosten / Math.max(d.aantalLiften, 1);
+      });
+      
+      alert(`Sjabloon van ${d.projectName} geladen ✅`);
+      if(n === 2) berekenTCO2(); else berekenTCO();
+      autoSave(); 
+    } catch(err) { 
+      alert('Fout bij laden: ' + err.message); 
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GRAFIEKEN SCHALEN VOOR PRINT
+// ═══════════════════════════════════════════════════════════════
+window.addEventListener('beforeprint', () => {
+  [chartBarInst, chartPieInst, chartLineInst, vChartLineInst, vChartBarInst]
+    .forEach(c => { if (c) { c.resize(); c.update('none'); } });
+});
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER TABELLEN
+// ═══════════════════════════════════════════════════════════════
+function renderTables(sfx) {
+  const s = sfx||'';
+  const mainBody = document.querySelector('#mainComponentsTable'+s+' tbody');
+  const subBody  = document.querySelector('#subComponentsTable'+s+' tbody');
+  if (!mainBody || !subBody) return;
+  mainBody.innerHTML = '';
+  subBody.innerHTML = '';
+  defaultMainComponents.forEach((row,i) => {
+    const idPfx = 'mc_'+i+s;
+    const tr = document.createElement('tr');
+    if (row.component) {
+      tr.innerHTML = `<td>${row.component}</td>
+        <td><input type="number" id="${idPfx}_v" value="${row.vervanging}" step="100" onchange="autoSave()"></td>
+        <td><input type="number" id="${idPfx}_i" value="${row.interval}" step="1" onchange="autoSave()"></td>`;
+    } else {
+      tr.innerHTML = `<td><input id="${idPfx}_n" value="" placeholder="Optioneel component" onchange="autoSave()"></td>
+        <td><input type="number" id="${idPfx}_v" value="0" step="100" onchange="autoSave()"></td>
+        <td><input type="number" id="${idPfx}_i" value="0" step="1" onchange="autoSave()"></td>`;
+    }
+    mainBody.appendChild(tr);
+  });
+  defaultSubComponents.forEach((row,i) => {
+    const idPfx = 'sc_'+i+s;
+    const tr = document.createElement('tr');
+    if (row.onderdeel) {
+      tr.innerHTML = `<td>${row.categorie}</td><td>${row.onderdeel}</td>
+        <td><input type="number" id="${idPfx}_i" value="${row.interval}" step="1" onchange="autoSave()"></td>
+        <td><input type="number" id="${idPfx}_k" value="${row.kosten}" step="100" onchange="autoSave()"></td>`;
+    } else {
+      tr.innerHTML = `<td><input id="${idPfx}_c" value="" placeholder="Categorie" onchange="autoSave()"></td>
+        <td><input id="${idPfx}_n" value="" placeholder="Omschrijving" onchange="autoSave()"></td>
+        <td><input type="number" id="${idPfx}_i" value="0" step="1" onchange="autoSave()"></td>
+        <td><input type="number" id="${idPfx}_k" value="0" step="100" onchange="autoSave()"></td>`;
+    }
+    subBody.appendChild(tr);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INPUTS & BEREKENING
+// ═══════════════════════════════════════════════════════════════
+function getShared() {
+  return {
+    startjaar:    gi('g_startjaar') || 2026,
+    zichtperiode: gi('g_zichtperiode') || 10,
+    looptijd:     gi('g_looptijd') || 50,
+    stopplaatsen: gi('g_stopplaatsen') || 4,
+    opvoerhoogte: gn('g_opvoerhoogte') || 12,
+    hefvermogen:  gn('g_hefvermogen') || 1000,
+    discount:     (gn('g_discount') || 0) / 100,
+    kwhPrijs:     gn('g_kwhPrijs') || 0.28,
+  };
+}
+
+function getInputs(sfx) {
+  const s = sfx||'';
+  const sh = getShared();
+  const aantalLiften = gi('aantalLiften'+s)||1;
+  const main = defaultMainComponents.map((row,i) => {
+    const idPfx = 'mc_'+i+s;
+    const nm = row.component || (document.getElementById(idPfx+'_n') ? document.getElementById(idPfx+'_n').value.trim() : '');
+    if (!nm) return null;
+    return {
+      component: nm,
+      interval:  gi(idPfx+'_i'),
+      vervanging:(gn(idPfx+'_v'))*aantalLiften,
+    };
+  }).filter(Boolean);
+  const sub = defaultSubComponents.map((row,i) => {
+    const idPfx = 'sc_'+i+s;
+    const nm = row.onderdeel || (document.getElementById(idPfx+'_n') ? document.getElementById(idPfx+'_n').value.trim() : '');
+    if (!nm) return null;
+    const cat = row.categorie || (document.getElementById(idPfx+'_c') ? document.getElementById(idPfx+'_c').value.trim() : '');
+    return {
+      categorie: cat,
+      onderdeel: nm,
+      interval:  gi(idPfx+'_i'),
+      kosten:    gn(idPfx+'_k')*aantalLiften,
+    };
+  }).filter(Boolean);
+
+  return {
+    ...sh,
+    projectName:      gv('projectName'+s)||'Lift '+(s||'1'),
+    projectRef:       gv('projectRef'+s)||'',
+    systeemType:      gv('systeemType'+s)||'open',
+    aantalLiften,
+    aanschafPrijs:    gn('aanschafPrijs'+s)*aantalLiften,
+    brandweerlift:    gv('brandweerlift'+s),
+    onderhoudJaar:    gn('onderhoudJaar'+s)*aantalLiften,
+    onvoorzienType:   gv('onvoorzienType'+s),
+    onvoorzienWaarde: gn('onvoorzienWaarde'+s),
+    inflatie:         gn('inflatie'+s)/100,
+    kwhJaar:          gn('kwhJaar'+s)*aantalLiften,
+    energieKostenJaar:gn('kwhJaar'+s)*aantalLiften*sh.kwhPrijs,
+    vandalismeJaar:   gn('vandalismeJaar'+s)*aantalLiften,
+    stilstandJaar:    gn('stilstandJaar'+s)*aantalLiften,
+    main, sub,
+  };
+}
+
+function calcTCO(data) {
+  const yearly=[], events=[];
+  let cum=0;
+  let npv=0;
+
+  function mainKey(name) {
+    return name.toLowerCase()
+      .replace(' compleet','')
+      .replace(' en cabinebekleding','')
+      .replace(' en signaleringen','')
+      .split(' en ')[0]
+      .trim();
+  }
+
+  const subLastReplaced = data.sub.map(() => 0);
+
+  for (let jaar=0; jaar<=data.looptijd; jaar++) {
+    const ky = data.startjaar + jaar;
+    const inv  = jaar===0 ? data.aanschafPrijs : 0;
+    const ond  = jaar===0 ? 0 : data.onderhoudJaar * fac(jaar, data.inflatie);
+    const nrg  = jaar===0 ? 0 : data.energieKostenJaar * fac(jaar, data.inflatie);
+    const onv  = jaar===0 ? 0 : (data.onvoorzienType==='pct' ? ond*(data.onvoorzienWaarde/100) : data.onvoorzienWaarde*fac(jaar,data.inflatie));
+    const vand = jaar===0 ? 0 : data.vandalismeJaar * fac(jaar, data.inflatie);
+    const stil = jaar===0 ? 0 : data.stilstandJaar  * fac(jaar, data.inflatie);
+    let plan = 0;
+
+    if (jaar > 0) {
+      const mainFiredKeys = [];
+      data.main.forEach(r => {
+        if (r.interval > 0 && jaar % r.interval === 0) {
+          const k = r.vervanging * fac(jaar, data.inflatie);
+          plan += k;
+          events.push({jaar, ky, categorie:'Hoofdcomponent', onderdeel:r.component, kosten:Math.round(k)});
+          mainFiredKeys.push(mainKey(r.component));
+        }
+      });
+
+      data.sub.forEach((r, i) => {
+        const catKey = mainKey(r.categorie);
+        if (mainFiredKeys.some(mk => catKey.startsWith(mk) || mk.startsWith(catKey))) {
+          subLastReplaced[i] = jaar;
+        }
+      });
+
+      data.sub.forEach((r, i) => {
+        if (r.interval <= 0) return;
+        const nextDue = subLastReplaced[i] + r.interval;
+        if (jaar === nextDue) {
+          const catKey = mainKey(r.categorie);
+          const parentFiredThisYear = mainFiredKeys.some(mk => catKey.startsWith(mk) || mk.startsWith(catKey));
+          if (!parentFiredThisYear) {
+            const k = r.kosten * fac(jaar, data.inflatie);
+            plan += k;
+            events.push({jaar, ky, categorie:r.categorie, onderdeel:r.onderdeel, kosten:Math.round(k)});
+            subLastReplaced[i] = jaar;
+          }
+        }
+      });
+    }
+
+    const totaal = inv + ond + nrg + onv + vand + stil + plan;
+    cum += totaal;
+    
+    const discountDiv = Math.pow(1 + data.discount, jaar);
+    const discountTotaal = totaal / discountDiv;
+    npv += discountTotaal;
+
+    yearly.push({
+      jaar, ky,
+      inv:Math.round(inv), ond:Math.round(ond), nrg:Math.round(nrg), onv:Math.round(onv),
+      vand:Math.round(vand), stil:Math.round(stil), plan:Math.round(plan),
+      totaal:Math.round(totaal), cum:Math.round(cum), npvCum:Math.round(npv)
+    });
+  }
+
+  const zicht = data.zichtperiode;
+  return {
+    ...data, yearly, events,
+    tcoZicht: yearly.filter(y=>y.jaar<=zicht).reduce((s,y)=>s+y.totaal,0),
+    tco50:    yearly.reduce((s,y)=>s+y.totaal,0),
+    npvTotal: Math.round(npv),
+    totOnd:   yearly.reduce((s,y)=>s+y.ond,0),
+    totNrg:   yearly.reduce((s,y)=>s+y.nrg,0),
+    totOnv:   yearly.reduce((s,y)=>s+y.onv,0),
+    totVand:  yearly.reduce((s,y)=>s+y.vand,0),
+    totStil:  yearly.reduce((s,y)=>s+y.stil,0),
+    totPlan:  yearly.reduce((s,y)=>s+y.plan,0),
+  };
+}
+
+function renderResults(result, sfx) {
+  const s = sfx||'';
+  const r = result;
+  const bwTxt = r.brandweerlift==='ja'?'🚒 Brandweerlift':'Geen brandweerlift';
+  const archTxt = r.systeemType==='closed'?'🔒 Gesloten systeem':'🔓 Open componenten';
+  const shSpec = getShared();
+  const sl = document.getElementById('specLine'+s);
+  if(sl) sl.innerHTML = `<strong>${r.projectName}</strong> &nbsp;|&nbsp; ${archTxt} &nbsp;|&nbsp; ${shSpec.hefvermogen}kg &nbsp;|&nbsp; ${shSpec.stopplaatsen} stops &nbsp;|&nbsp; ${bwTxt}`;
+  
+  const set = (id,v)=>{ const el=document.getElementById(id+s); if(el) el.textContent=v; };
+  set('kpiInitieel', euro(r.aanschafPrijs));
+  set('kpi10', euro(r.tcoZicht));
+  set('kpi10Label', `Eerste ${r.zichtperiode} jaar (MJOP)`);
+  set('kpi50', euro(r.tco50));
+  set('kpi50Years', `over ${r.looptijd} jaar`);
+  set('kpiNPV', euro(r.npvTotal));
+  set('kpiNPVLabel', shSpec.discount > 0 ? `Discontovoet ${(shSpec.discount*100).toFixed(1)}%` : 'Nominaal (0% disconto)');
+
+  const chips = document.getElementById('chips'+s);
+  if(chips) chips.innerHTML = [
+    ['Investering', euro(r.aanschafPrijs)],
+    ['Onderhoud', euro(r.totOnd)],
+    ['Energie', euro(r.totNrg)],
+    ['Planmatig (MJOP)', euro(r.totPlan)],
+    ['Onvoorzien', euro(r.totOnv)],
+  ].filter(([,v])=>v!=='€\u00a00').map(([l,v])=>`<span class="spec-badge">${l} ${v}</span>`).join('');
+
+  const piek = [...r.yearly].sort((a,b)=>b.totaal-a.totaal)[0];
+  const ub = document.getElementById('uitlegBox'+s);
+  if(ub) ub.innerHTML = `Hoogste kostenpiek in <strong>jaar ${piek.jaar} (${piek.ky})</strong>: <strong>${euro(piek.totaal)}</strong>. TCO over ${r.looptijd}jr inclusief ${(r.inflatie*100).toFixed(1)}% indexering.`;
+  
+  const yb = document.querySelector('#yearlyTable'+s+' tbody');
+  if(yb){
+    yb.innerHTML='';
+    r.yearly.forEach(y=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${y.jaar}</td><td>${y.ky}</td><td>${euro(y.inv)}</td><td>${euro(y.ond)}</td><td>${euro(y.nrg)}</td><td>${euro(y.plan)}</td><td>${euro(y.totaal)}</td><td>${euro(y.cum)}</td>`;
+      yb.appendChild(tr);
+    });
+  }
+}
+
+function berekenTCO() {
+  lastResult = calcTCO(getInputs(''));
+  renderResults(lastResult, '');
+  if(dashVisible) setTimeout(renderDashboard, 50);
+  autoSave();
+}
+
+function berekenTCO2() {
+  lastResult2 = calcTCO(getInputs('2'));
+  renderResults(lastResult2, '2');
+  if(dashVisible) setTimeout(renderDashboard, 50);
+  autoSave();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MARKETING PRESETS: CLOSED VS OPEN ARCHITECTUUR
+// ═══════════════════════════════════════════════════════════════
+function applyPreset(liftNum, type) {
+  const s = liftNum === 2 ? '2' : '';
+  const setVal = (id, val) => { const el = document.getElementById(id+s); if(el) el.value = val; };
+
+  if (type === 'closed') {
+    setVal('projectName', liftNum===2 ? 'Lift 2 (Fabrikant Gesloten)' : 'Lift 1 (Fabrikant Gesloten)');
+    setVal('systeemType', 'closed');
+    setVal('aanschafPrijs', 36000);
+    setVal('onderhoudJaar', 3950);
+    setVal('kwhJaar', 2600);
+    setVal('onvoorzienWaarde', 350);
+    
+    setVal('mc_0_v', 19500); setVal('mc_0_i', 25);
+    setVal('mc_1_v', 26000); setVal('mc_1_i', 18);
+    setVal('sc_2_k', 5800);  setVal('sc_2_i', 10);
+    setVal('sc_4_k', 2400);  setVal('sc_4_i', 8);
+  } else {
+    setVal('projectName', liftNum===2 ? 'Lift 2 (Open Componenten)' : 'Lift 1 (Open Componenten)');
+    setVal('systeemType', 'open');
+    setVal('aanschafPrijs', 46500);
+    setVal('onderhoudJaar', 2850);
+    setVal('kwhJaar', 1950);
+    setVal('onvoorzienWaarde', 200);
+
+    setVal('mc_0_v', 17000); setVal('mc_0_i', 28);
+    setVal('mc_1_v', 21000); setVal('mc_1_i', 25);
+    setVal('sc_2_k', 3900);  setVal('sc_2_i', 14);
+    setVal('sc_4_k', 1200);  setVal('sc_4_i', 12);
+  }
+
+  if (liftNum === 2) berekenTCO2(); else berekenTCO();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// VERGELIJKING & BREAK-EVEN
+// ═══════════════════════════════════════════════════════════════
+function berekenVergelijk() {
+  berekenTCO();
+  berekenTCO2();
+  const r1 = lastResult, r2 = lastResult2;
+  const sh = getShared();
+
+  document.getElementById('vergelijkStatus').innerHTML = `Vergelijking: <strong>${r1.projectName}</strong> vs <strong>${r2.projectName}</strong> — looptijd ${sh.looptijd} jaar, MJOP-zicht ${sh.zichtperiode} jaar.`;
+
+  const specs = [
+    ['Project / Concept', r1.projectName, r2.projectName],
+    ['Systeemtype', r1.systeemType==='closed'?'Gesloten fabrikant':'Open componenten', r2.systeemType==='closed'?'Gesloten fabrikant':'Open componenten'],
+    ['Aanschafprijs', euro(r1.aanschafPrijs), euro(r2.aanschafPrijs)],
+    ['Onderhoud / jaar', euro(r1.onderhoudJaar), euro(r2.onderhoudJaar)],
+    ['Stroomverbruik / jaar', `${r1.kwhJaar} kWh (${euro(r1.energieKostenJaar)})`, `${r2.kwhJaar} kWh (${euro(r2.energieKostenJaar)})`],
+  ];
+  document.getElementById('specVergelijkTable').innerHTML = '<table style="width:100%;font-size:13px;border-collapse:collapse;">'+
+    '<thead><tr><th style="padding:6px;background:#eaf2ff;">Kenmerk</th><th style="padding:6px;background:#eaf2ff;color:#0f62fe;">Lift 1</th><th style="padding:6px;background:#eaf2ff;color:#0d9488;">Lift 2</th></tr></thead>'+
+    '<tbody>'+specs.map(([l,v1,v2])=>`<tr><td style="padding:6px;border-bottom:1px solid #e5e7eb;">${l}</td><td style="padding:6px;border-bottom:1px solid #e5e7eb;font-weight:700;">${v1}</td><td style="padding:6px;border-bottom:1px solid #e5e7eb;font-weight:700;">${v2}</td></tr>`).join('')+'</tbody></table>';
+
+  const kpiHtml = (r, color) => `<h3 style="margin:0 0 10px;color:${color};">${r.projectName}</h3>
+    <div class="kpi">
+      <div class="box"><span class="muted">Aanschaf</span><strong>${euro(r.aanschafPrijs)}</strong></div>
+      <div class="box"><span class="muted">MJOP ${r.zichtperiode}jr</span><strong>${euro(r.tcoZicht)}</strong></div>
+      <div class="box"><span class="muted">TCO ${r.looptijd}jr (Nominaal)</span><strong>${euro(r.tco50)}</strong></div>
+      <div class="box"><span class="muted">Contante Waarde (NPV)</span><strong style="color:var(--accent2);">${euro(r.npvTotal)}</strong></div>
+    </div>`;
+  document.getElementById('kpiCard1').innerHTML = kpiHtml(r1, '#0f62fe');
+  document.getElementById('kpiCard2').innerHTML = kpiHtml(r2, '#0d9488');
+
+  if (vChartLineInst) vChartLineInst.destroy();
+  vChartLineInst = new Chart(document.getElementById('vChartLine'),{
+    type: 'line',
+    data: {
+      labels: r1.yearly.map(y=>y.ky),
+      datasets: [
+        { label: r1.projectName, data: r1.yearly.map(y=>y.cum), borderColor: '#0f62fe', backgroundColor: 'rgba(15,98,254,0.06)', fill: true, tension: 0.2, pointRadius: 1, borderWidth: 2.5 },
+        { label: r2.projectName, data: r2.yearly.map(y=>y.cum), borderColor: '#0d9488', backgroundColor: 'rgba(13,148,136,0.06)', fill: true, tension: 0.2, pointRadius: 1, borderWidth: 2.5 },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'bottom' } },
+      scales: { y: { ticks: { callback: v => '€' + (v>=1000 ? (v/1000).toFixed(0)+'k' : v) } } }
+    }
+  });
+
+  const vis1 = r1.yearly.filter(y=>y.jaar>=1 && y.jaar<=sh.zichtperiode);
+  const vis2 = r2.yearly.filter(y=>y.jaar>=1 && y.jaar<=sh.zichtperiode);
+  if (vChartBarInst) vChartBarInst.destroy();
+  vChartBarInst = new Chart(document.getElementById('vChartBar'),{
+    type: 'bar',
+    data: {
+      labels: vis1.map(y=>y.ky),
+      datasets: [
+        { label: r1.projectName, data: vis1.map(y=>y.totaal), backgroundColor: 'rgba(15,98,254,0.8)' },
+        { label: r2.projectName, data: vis2.map(y=>y.totaal), backgroundColor: 'rgba(13,148,136,0.8)' },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'bottom' } },
+      scales: { y: { ticks: { callback: v => '€' + (v>=1000 ? (v/1000).toFixed(0)+'k' : v) } } }
+    }
+  });
+
+  const periods = [
+    ['Investering (Jaar 0)', r => r.yearly[0].totaal],
+    [`MJOP Exploitatie (Jaar 1–${sh.zichtperiode})`, r => r.yearly.filter(y=>y.jaar>=1 && y.jaar<=sh.zichtperiode).reduce((s,y)=>s+y.totaal,0)],
+    [`Totale TCO (${sh.looptijd} jaar)`, r => r.tco50],
+    ['Netto Contante Waarde (NPV)', r => r.npvTotal],
+    ['Gemiddelde jaarlast (TCO/looptijd)', r => Math.round(r.tco50/r.looptijd)],
+  ];
+  const vtb = document.querySelector('#vTable tbody');
+  vtb.innerHTML = '';
+  periods.forEach(([lbl, fn]) => {
+    const v1 = fn(r1), v2 = fn(r2), diff = v1 - v2;
+    const winner = diff > 0 ? r2.projectName : diff < 0 ? r1.projectName : 'Gelijk';
+    const c1 = diff > 0 ? 'loser' : diff < 0 ? 'winner' : 'equal';
+    const c2 = diff < 0 ? 'loser' : diff > 0 ? 'winner' : 'equal';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${lbl}</td><td class="${c1}">${euro(v1)}</td><td class="${c2}">${euro(v2)}</td><td>${diff!==0 ? euro(Math.abs(diff)) : '—'}</td><td><strong>${winner}</strong></td>`;
+    vtb.appendChild(tr);
+  });
+
+  let breakEven = null;
+  for(let j=1; j<=sh.looptijd; j++){
+    const c1 = r1.yearly.slice(0, j+1).reduce((s,y)=>s+y.totaal,0);
+    const c2 = r2.yearly.slice(0, j+1).reduce((s,y)=>s+y.totaal,0);
+    if(breakEven===null && ((r1.aanschafPrijs > r2.aanschafPrijs && c1 <= c2) || (r2.aanschafPrijs > r1.aanschafPrijs && c2 <= c1))){
+      breakEven = j;
+    }
+  }
+
+  const dearer = r1.aanschafPrijs > r2.aanschafPrijs ? r1.projectName : r2.projectName;
+  const cheaper = r1.aanschafPrijs <= r2.aanschafPrijs ? r1.projectName : r2.projectName;
+  const diff50 = Math.abs(r1.tco50 - r2.tco50);
+  const bestTco = r1.tco50 < r2.tco50 ? r1.projectName : r2.projectName;
+
+  if (breakEven) {
+    document.getElementById('breakevenTxt').innerHTML = `💡 <strong>${dearer}</strong> vraagt een hogere initiële investering, maar verdient zichzelf terug in <strong>jaar ${breakEven} (${sh.startjaar + breakEven})</strong>. Vanaf dat jaar is de kwalitatieve optie cumulatief voordeliger.<br><br>Over de gehele levensduur van ${sh.looptijd} jaar bespaart u met <strong>${bestTco}</strong> een totaalbedrag van <strong>${euro(diff50)}</strong> aan exploitatie- en vervangingskosten.`;
+  } else {
+    document.getElementById('breakevenTxt').innerHTML = `💡 <strong>${cheaper}</strong> start goedkoper en blijft over de gehele looptijd van ${sh.looptijd} jaar financieel de meest voordelige optie (totale voorsprong: <strong>${euro(diff50)}</strong>).`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════════════
+function renderDashboard() {
+  const r = dashLift===2 ? lastResult2 : lastResult;
+  if (!r) { if(dashLift===2) berekenTCO2(); else berekenTCO(); return; }
+  const zicht = r.zichtperiode;
+  const sh = getShared();
+
+  const sb = document.getElementById('specBadges');
+  if(sb) sb.innerHTML = `<span class="spec-badge">⚖️ ${sh.hefvermogen}kg</span><span class="spec-badge">🏢 ${sh.stopplaatsen} stops</span><span class="spec-badge">📐 ${sh.opvoerhoogte}m</span><span class="spec-badge">${r.systeemType==='closed'?'🔒 Gesloten':'🔓 Open markt'}</span><span class="spec-badge">⚡ ${r.kwhJaar} kWh/jr</span>`;
+
+  const dk = document.getElementById('dashKpis');
+  if(dk) dk.innerHTML = `
+    <div class="dash-kpi"><div class="dlabel">Investering</div><div class="dval">${euro(r.aanschafPrijs)}</div><div class="dnote">Jaar 0</div></div>
+    <div class="dash-kpi"><div class="dlabel">MJOP ${zicht} jaar</div><div class="dval">${euro(r.tcoZicht)}</div><div class="dnote">Zichtperiode</div></div>
+    <div class="dash-kpi"><div class="dlabel">TCO Totaal</div><div class="dval">${euro(r.tco50)}</div><div class="dnote">${r.looptijd} jaar nominaal</div></div>
+    <div class="dash-kpi"><div class="dlabel">Netto Contant (NPV)</div><div class="dval" style="color:var(--accent2);">${euro(r.npvTotal)}</div><div class="dnote">Disconto ${(sh.discount*100).toFixed(1)}%</div></div>`;
+
+  const vis = r.yearly.filter(y=>y.jaar>=1 && y.jaar<=zicht);
+  const pl = document.getElementById('chartPeriodeLabel'); if(pl) pl.textContent = `Jaar 1 t/m ${zicht}`;
+  
+  if (chartBarInst) chartBarInst.destroy();
+  chartBarInst = new Chart(document.getElementById('chartBar'),{
+    type: 'bar',
+    data: {
+      labels: vis.map(y=>y.ky),
+      datasets: [
+        { label:'Onderhoud', data:vis.map(y=>y.ond), backgroundColor:COLORS[0], stack:'a' },
+        { label:'Energie', data:vis.map(y=>y.nrg), backgroundColor:COLORS[5], stack:'a' },
+        { label:'Planmatig (MJOP)', data:vis.map(y=>y.plan), backgroundColor:COLORS[1], stack:'a' },
+        { label:'Onvoorzien', data:vis.map(y=>y.onv), backgroundColor:COLORS[2], stack:'a' },
+      ]
+    },
+    options: { responsive:true, plugins:{ legend:{ position:'bottom' } }, scales:{ x:{ stacked:true }, y:{ stacked:true } } }
+  });
+
+  const pd = [
+    { l:'Investering', v:r.aanschafPrijs },
+    { l:'Onderhoud', v:r.totOnd },
+    { l:'Energie', v:r.totNrg },
+    { l:'Planmatig (MJOP)', v:r.totPlan },
+    { l:'Onvoorzien', v:r.totOnv },
+  ].filter(d=>d.v>0);
+
+  if (chartPieInst) chartPieInst.destroy();
+  chartPieInst = new Chart(document.getElementById('chartPie'),{
+    type: 'doughnut',
+    data: { labels: pd.map(d=>d.l), datasets:[{ data:pd.map(d=>d.v), backgroundColor:COLORS, borderWidth:2 }] },
+    options: { responsive:true, plugins:{ legend:{ position:'bottom' } } }
+  });
+
+  if (chartLineInst) chartLineInst.destroy();
+  chartLineInst = new Chart(document.getElementById('chartLine'),{
+    type: 'line',
+    data: {
+      labels: r.yearly.map(y=>y.ky),
+      datasets: [
+        { label:'Cumulatief Nominaal', data:r.yearly.map(y=>y.cum), borderColor:COLORS[0], backgroundColor:'rgba(15,98,254,0.06)', fill:true, tension:0.2, pointRadius:1 },
+        { label:'Netto Contant (NPV)', data:r.yearly.map(y=>y.npvCum), borderColor:COLORS[1], borderDash:[4,4], fill:false, tension:0.2, pointRadius:1 },
+      ]
+    },
+    options: { responsive:true, plugins:{ legend:{ position:'bottom' } } }
+  });
+
+  const top5 = [...r.yearly].filter(y=>y.jaar>0).sort((a,b)=>b.totaal-a.totaal).slice(0,5);
+  const ty = document.getElementById('topYears');
+  if(ty) ty.innerHTML = top5.map(y=>`<div class="top-year-card"><div class="yr">Jaar ${y.jaar}</div><div class="ky">${y.ky}</div><div class="amt">${euro(y.totaal)}</div></div>`).join('');
+}
+
+function setDashLift(n) {
+  dashLift = n;
+  document.getElementById('dashBtnL1').classList.toggle('active', n===1);
+  document.getElementById('dashBtnL2').classList.toggle('active', n===2);
+  document.getElementById('dashTitle').textContent = 'Dashboard — Lift ' + n;
+  renderDashboard();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MJOP SAMENVATTING & OVERZICHT
+// ═══════════════════════════════════════════════════════════════
+function renderPlanning() {
+  const r1 = lastResult, r2 = lastResult2;
+  if (!r1 && !r2) return;
+  const sh = getShared();
+  const zicht = sh.zichtperiode;
+
+  function eventsInZicht(result, label) {
+    if (!result) return [];
+    return (result.events || [])
+      .filter(e => e.jaar >= 1 && e.jaar <= zicht)
+      .map(e => ({ ...e, lift: label, projectName: result.projectName }));
+  }
+
+  const all = [...eventsInZicht(r1, 'Lift 1'), ...eventsInZicht(r2, 'Lift 2')];
+  const byYear = {};
+  all.forEach(e => { if (!byYear[e.jaar]) byYear[e.jaar] = []; byYear[e.jaar].push(e); });
+  const jaren = Object.keys(byYear).map(Number).sort((a,b)=>a-b);
+  const dual = r1 && r2;
+
+  let html = `
+    <div style="background:#f8fbff;border:1px solid #d7e7ff;border-radius:12px;padding:16px;margin-bottom:20px;">
+      <h3 style="margin:0 0 6px;">Executive Management Samenvatting (MJOP ${zicht} jaar)</h3>
+      <p style="margin:0;font-size:13px;color:var(--muted);">Prognose van de totale exploitatie en geplande werkzaamheden voor de komende ${zicht} jaar (${sh.startjaar} t/m ${sh.startjaar + zicht}).</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:14px;">
+        ${r1 ? `<div style="background:#fff;padding:10px 14px;border-radius:10px;border:1px solid var(--line);">
+          <div style="font-size:11px;color:var(--muted);font-weight:700;">MJOP TOTAAL — ${r1.projectName}</div>
+          <div style="font-size:20px;font-weight:700;color:#0f62fe;margin-top:4px;">${euro(r1.tcoZicht)}</div>
+        </div>` : ''}
+        ${r2 ? `<div style="background:#fff;padding:10px 14px;border-radius:10px;border:1px solid var(--line);">
+          <div style="font-size:11px;color:var(--muted);font-weight:700;">MJOP TOTAAL — ${r2.projectName}</div>
+          <div style="font-size:20px;font-weight:700;color:#0d9488;margin-top:4px;">${euro(r2.tcoZicht)}</div>
+        </div>` : ''}
+      </div>
+    </div>`;
+
+  html += `<h3 style="margin-top:20px;margin-bottom:10px;">Geplande werkzaamheden per kalenderjaar</h3>`;
+  if (jaren.length === 0) {
+    html += '<p style="color:var(--muted);">Geen grootschalige componentvervangingen voorzien binnen de zichtperiode.</p>';
+  } else {
+    jaren.forEach(jaar => {
+      const ky = sh.startjaar + jaar;
+      const ev = byYear[jaar];
+      const jTotaal = ev.reduce((s,e)=>s+e.kosten,0);
+      html += `<div style="margin-bottom:18px;page-break-inside:avoid;">
+        <div style="background:var(--accent);color:white;padding:8px 14px;border-radius:8px 8px 0 0;font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:center;">
+          <span>📅 Kalenderjaar ${ky} (Jaar ${jaar})</span><span>Totaal gepland: ${euro(jTotaal)}</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="background:var(--head);">
+            ${dual ? '<th style="padding:6px 10px;text-align:left;border:1px solid var(--line);width:90px;">Lift</th>' : ''}
+            <th style="padding:6px 10px;text-align:left;border:1px solid var(--line);">Categorie</th>
+            <th style="padding:6px 10px;text-align:left;border:1px solid var(--line);">Omschrijving werkzaamheden</th>
+            <th style="padding:6px 10px;text-align:right;border:1px solid var(--line);">Kosten (geïndexeerd)</th>
+          </tr></thead><tbody>`;
+      ev.forEach(e => {
+        const lc = e.lift==='Lift 1'?'#0f62fe':'#14b8a6';
+        html += `<tr>
+          ${dual ? `<td style="padding:6px 10px;border:1px solid var(--line);"><span style="color:${lc};font-weight:700;">${e.lift}</span></td>` : ''}
+          <td style="padding:6px 10px;border:1px solid var(--line);">${e.categorie}</td>
+          <td style="padding:6px 10px;border:1px solid var(--line);">${e.onderdeel}</td>
+          <td style="padding:6px 10px;text-align:right;font-weight:700;border:1px solid var(--line);">${euro(e.kosten)}</td>
+        </tr>`;
+      });
+      html += `</tbody></table></div>`;
+    });
+  }
+
+  document.getElementById('planningContent').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TABS & EXCEL
+// ═══════════════════════════════════════════════════════════════
+function switchTab(tab) {
+  ['Gedeeld','Lift1','Lift2','Vergelijk','Dashboard','Planning'].forEach(t=>{
+    const panel = document.getElementById('tab'+t);
+    const btn = document.getElementById('tabBtn'+t);
+    if(panel) panel.classList.toggle('active', t.toLowerCase()===tab.toLowerCase());
+    if(btn) btn.classList.toggle('active', t.toLowerCase()===tab.toLowerCase());
+  });
+  dashVisible = (tab==='dashboard');
+  if(dashVisible) { berekenTCO(); berekenTCO2(); setTimeout(renderDashboard, 100); }
+  if(tab==='vergelijk') { berekenTCO(); berekenTCO2(); setTimeout(berekenVergelijk, 100); }
+  if(tab==='planning') { berekenTCO(); berekenTCO2(); setTimeout(renderPlanning, 100); }
+}
+
+function buildExcel(result) {
+  const r=result, wb=XLSX.utils.book_new();
+  const s1=[
+    ['Rapport', 'TCO & MJOP Liftanalyse v29'],
+    ['Project', r.projectName],
+    ['Systeemtype', r.systeemType],
+    ['Hefvermogen', r.hefvermogen],
+    ['Stopplaatsen', r.stopplaatsen],
+    ['Aanschaf', r.aanschafPrijs],
+    ['Onderhoud/jr', r.onderhoudJaar],
+    ['Energie/jr', r.kwhJaar + ' kWh'],
+    ['TCO Nominaal', r.tco50],
+    ['Netto Contante Waarde (NPV)', r.npvTotal]
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(s1), 'Samenvatting');
+  
+  const yh=[['Jaar','Kalenderjaar','Investering','Onderhoud','Energie','Onvoorzien','Vandalisme','Stilstand','Planmatig','Totaal','Cumulatief','NPV_Cum']];
+  r.yearly.forEach(y=>yh.push([y.jaar, y.ky, y.inv, y.ond, y.nrg, y.onv, y.vand, y.stil, y.plan, y.totaal, y.cum, y.npvCum]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(yh), 'Jaarprognose');
+  
+  const eh=[['Jaar','Kalenderjaar','Categorie','Onderdeel','Kosten']];
+  r.events.forEach(e=>eh.push([e.jaar, e.ky, e.categorie, e.onderdeel, e.kosten]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(eh), 'MJOP_Planning');
+  return wb;
+}
+function exportExcel()  { if(!lastResult)  berekenTCO();  XLSX.writeFile(buildExcel(lastResult), (lastResult.projectName||'Lift1').replace(/[^a-z0-9]/gi,'_')+'_TCO_v29.xlsx'); }
+function exportExcel2() { if(!lastResult2) berekenTCO2(); XLSX.writeFile(buildExcel(lastResult2), (lastResult2.projectName||'Lift2').replace(/[^a-z0-9]/gi,'_')+'_TCO_v29.xlsx'); }
+
+// ═══════════════════════════════════════════════════════════════
+// LOCALSTORAGE AUTO-SAVE (V29)
+// ═══════════════════════════════════════════════════════════════
+function autoSave() {
+  try {
+    const data = { l1: getInputs(''), l2: getInputs('2') };
+    localStorage.setItem('tco_draft_v29', JSON.stringify(data));
+  } catch(e) {}
+}
+
+function loadAutoSave() {
+  try {
+    const raw = localStorage.getItem('tco_draft_v29') || localStorage.getItem('tco_draft_v27');
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    if(d.l1 && d.l1.projectName) populateFromData(d.l1, '');
+    if(d.l2 && d.l2.projectName) populateFromData(d.l2, '2');
+  } catch(e) {}
+}
+
+function populateFromData(d, sfx) {
+  const setVal = (id, v) => { const el = document.getElementById(id+sfx); if(el && v!==undefined) el.value = v; };
+  setVal('projectName', d.projectName);
+  setVal('projectRef', d.projectRef);
+  setVal('systeemType', d.systeemType || 'open');
+  setVal('aanschafPrijs', d.aanschafPrijs / Math.max(d.aantalLiften,1));
+  setVal('brandweerlift', d.brandweerlift);
+  setVal('aantalLiften', d.aantalLiften);
+  setVal('onderhoudJaar', d.onderhoudJaar / Math.max(d.aantalLiften,1));
+  setVal('kwhJaar', d.kwhJaar / Math.max(d.aantalLiften,1));
+  setVal('onvoorzienType', d.onvoorzienType);
+  setVal('onvoorzienWaarde', d.onvoorzienWaarde);
+}
+
+function resetDefaults(sfx) {
+  if (confirm('Weet u zeker dat u de standaardwaarden wilt herstellen?')) {
+    localStorage.removeItem('tco_draft_v29');
+    localStorage.removeItem('tco_draft_v27');
+    location.reload();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PRINT / PDF
+// ═══════════════════════════════════════════════════════════════
+function printReport() { document.getElementById('printModal').classList.add('open'); }
+function closePrintModal() { document.getElementById('printModal').classList.remove('open'); }
+function toggleAllPrint(cb) { document.querySelectorAll('.pChoice').forEach(el => el.checked = cb.checked); }
+
+function doPrint() {
+  const selected = [...document.querySelectorAll('.pChoice:checked')].map(el => el.value);
+  if (selected.length === 0) { alert('Selecteer minimaal één sectie.'); return; }
+  closePrintModal();
+
+  berekenTCO();
+  berekenTCO2();
+  if (selected.includes('tabVergelijk')) berekenVergelijk();
+  if (selected.includes('tabDashboard')) renderDashboard();
+  if (selected.includes('tabPlanning')) renderPlanning();
+
+  document.querySelector('.tabs-nav').style.display = 'none';
+  const allPanels = document.querySelectorAll('.tab-panel');
+  allPanels.forEach(p => { p.style.display = selected.includes(p.id) ? 'block' : 'none'; });
+
+  setTimeout(() => {
+    window.print();
+    setTimeout(() => {
+      document.querySelector('.tabs-nav').style.display = '';
+      allPanels.forEach(p => { p.style.display = ''; });
+      const active = document.querySelector('.tab-btn.active');
+      if (active) active.click();
+    }, 500);
+  }, 500);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  renderTables('');
+  renderTables('2');
+  loadAutoSave();
+  berekenTCO();
+  berekenTCO2();
+
+  document.querySelectorAll('input, select').forEach(el => {
+    el.addEventListener('change', () => {
+      autoSave();
+    });
+  });
+});
+</script>
+</body>
+</html>
